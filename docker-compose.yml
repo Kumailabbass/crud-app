@@ -1,0 +1,46 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: .kumailskar.
+      DB_NAME: crud-app2
+    networks:
+      - crud-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./public:/app/public  # Add this line for live updates
+
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: .kumailskar.
+      POSTGRES_DB: crud-app2
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - crud-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  crud-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local
